@@ -1,0 +1,7 @@
+2025-03-12T10:00:00Z INFO auth-service login ok user_id=alice session=abc123
+2025-03-12T10:01:05Z WARN auth-service rate limit exceeded ip=203.0.113.44 endpoint=/v1/token
+2025-03-12T10:01:12Z ERROR auth-service invalid password for user bob@example.com ip=198.51.100.9
+2025-03-12T10:02:00Z ERROR auth-service invalid password for user bob@example.com ip=198.51.100.9
+2025-03-12T10:03:30Z ERROR auth-service account locked user_id=bob reason=too_many_failures
+2025-03-12T10:04:00Z INFO api-gateway GET /health 200 2ms
+2025-03-12T10:05:10Z ERROR payments-service charge failed txn_id=550e8400-e29b-41d4-a716-446655440000 code=card_declined

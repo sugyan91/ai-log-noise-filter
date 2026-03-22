@@ -16,5 +16,6 @@ venv/
 
 # Logs / temp
 *.log
+!samples/*.log
 data/
 
