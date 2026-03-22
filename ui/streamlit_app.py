@@ -159,6 +159,16 @@ Then click **Get guidance** again."""
 
 MIN_LOG_CHARS = 20
 
+COPILOT_WELCOME_ASSISTANT = (
+    "Hi — I use a **Hugging Face** model (**`google/flan-t5-base`** by default).\n\n"
+    "**Paste the error message, stack trace, or log lines** in **Error / logs**, then click **Get guidance**."
+)
+
+
+def _copilot_initial_messages() -> list[dict]:
+    return [{"role": "assistant", "content": COPILOT_WELCOME_ASSISTANT}]
+
+
 # Click a chip → inserts this text into the log box so users can paste underneath.
 PLATFORM_SCAFFOLDS: dict[str, str] = {
     "general": (
@@ -235,7 +245,7 @@ def _platform_chip_button(
             plat_key, PLATFORM_SCAFFOLDS["general"]
         )
         st.toast("Template loaded — paste your logs under the comment lines.")
-        st.rerun()
+        # No st.rerun(): Streamlit already re-runs once per click; extra rerun caused a full “double refresh”.
 
 
 WINDOW_CHOICES: list[tuple[int, str]] = [
@@ -268,7 +278,7 @@ Describe what you’re doing and paste the **exact** error; the HF model suggest
 tab_logs, tab_copilot = st.tabs(
     [
         "📊  Log analysis",
-        "📊  Troubleshooting copilot",
+        "💬  Troubleshooting copilot",
     ]
 )
 
@@ -418,7 +428,7 @@ with tab_logs:
                     with open(_SAMPLE_PATH, encoding="utf-8") as f:
                         st.session_state.log_input = f.read()
                     st.session_state["_run_after_sample"] = True
-                    st.rerun()
+                    # No st.rerun(): flag is read later this same run → auto-run works without a second full refresh.
                 except OSError:
                     st.error(f"Could not read sample file: {_SAMPLE_PATH}")
 
@@ -679,19 +689,7 @@ with tab_copilot:
     )
 
     if "copilot_msgs" not in st.session_state:
-        st.session_state.copilot_msgs = [
-            {
-                "role": "assistant",
-                "content": (
-                    "Hi — I use a **Hugging Face** model (**`google/flan-t5-base`** by default).\n\n"
-                    "**Paste the error message, stack trace, or log lines** in **Error / logs**, then click **Get guidance**."
-                ),
-            }
-        ]
-
-    for msg in st.session_state.copilot_msgs:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+        st.session_state.copilot_msgs = _copilot_initial_messages()
 
     st.markdown("##### 📄 Your goal & error text")
     st.caption(
@@ -716,9 +714,8 @@ with tab_copilot:
         go = st.button("▶ Get guidance", type="primary", key="copilot_go", use_container_width=True)
     with col_b:
         if st.button("Clear chat", key="copilot_clear", type="tertiary", use_container_width=True):
-            st.session_state.pop("copilot_msgs", None)
+            st.session_state.copilot_msgs = _copilot_initial_messages()
             st.session_state.pop("_copilot_last_submit", None)
-            st.rerun()
 
     if go:
         g = st.session_state.get("copilot_goal", "") or ""
@@ -743,7 +740,6 @@ with tab_copilot:
             st.session_state.copilot_msgs.append(
                 {"role": "assistant", "content": ASK_PASTE_ERROR}
             )
-            st.rerun()
         else:
             submit_key = hash((goal_for_prompt[:2000], paste[:4000]))
             if st.session_state.get("_copilot_last_submit") == submit_key:
@@ -786,8 +782,12 @@ with tab_copilot:
                         }
                     )
                     st.session_state["_copilot_last_submit"] = submit_key
-                st.toast("Response added — scroll the chat above.")
-            st.rerun()
+                st.toast("Response added — see conversation below.")
+
+    st.markdown("##### 💬 Conversation")
+    for msg in st.session_state.copilot_msgs:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
     st.caption(
         "Models: `HF_REMEDIATION_MODEL` (text) · clustering: `all-MiniLM-L6-v2`. "
