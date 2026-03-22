@@ -422,7 +422,7 @@ with tab_logs:
             if st.button(
                 "📥 Load example logs",
                 help="Fills the box from samples/demo.log",
-                type="tertiary",
+                type="secondary",
             ):
                 try:
                     with open(_SAMPLE_PATH, encoding="utf-8") as f:
@@ -713,7 +713,7 @@ with tab_copilot:
     with col_a:
         go = st.button("▶ Get guidance", type="primary", key="copilot_go", use_container_width=True)
     with col_b:
-        if st.button("Clear chat", key="copilot_clear", type="tertiary", use_container_width=True):
+        if st.button("Clear chat", key="copilot_clear", type="secondary", use_container_width=True):
             st.session_state.copilot_msgs = _copilot_initial_messages()
             st.session_state.pop("_copilot_last_submit", None)
 
