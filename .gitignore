@@ -20,5 +20,6 @@ Launch AI Log Noise Filter.app/
 # Logs / temp
 *.log
 !samples/*.log
+!hf-space/samples/*.log
 data/
 

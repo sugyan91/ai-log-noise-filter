@@ -1,5 +1,7 @@
 # Deploy this app on Hugging Face Spaces (no “Streamlit” SDK in the form)
 
+**Shortcut:** the repo root folder **`hf-space/`** already contains a full copy (`Dockerfile`, `app.py`, `requirements.txt`, `app/`, `ui/`, `samples/`, `README.md`) ready to paste into your Space repository. To refresh copies after editing the main app, run `./scripts/sync-hf-space.sh` from the repo root.
+
 The **New Space** form often only offers **Gradio**, **Docker**, and **Static**. Use **Docker** and point Streamlit at port **8501**.
 
 ## Steps
