@@ -14,49 +14,71 @@ def _inject_global_style() -> None:
     st.markdown(
         """
 <style>
+    /* Log textarea — grey placeholder */
+    [data-testid="stTextArea"] textarea::placeholder {
+        color: #94a3b8 !important;
+        opacity: 1 !important;
+        font-size: 0.95rem !important;
+    }
+    [data-testid="stTextArea"] textarea {
+        font-size: 0.92rem !important;
+    }
+
     .stTabs [data-baseweb="tab-list"] {
-        gap: 10px;
-        background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
-        padding: 10px 12px 0 12px;
-        border-radius: 14px 14px 0 0;
+        gap: 8px;
+        background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+        padding: 8px 10px 0 10px;
+        border-radius: 12px 12px 0 0;
         border: 1px solid #cbd5e1;
         border-bottom: none;
     }
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] {
-        border-radius: 12px 12px 0 0 !important;
-        padding: 12px 22px !important;
-        font-size: 0.95rem !important;
-        letter-spacing: 0.01em;
+        border-radius: 10px 10px 0 0 !important;
+        padding: 11px 20px !important;
+        font-size: 0.9rem !important;
+        letter-spacing: 0.02em;
         border: 2px solid transparent !important;
-        transition: background 0.15s ease, color 0.15s ease;
+        transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
     }
-    /* Log analysis tab — cool blues & teal */
+    /* Log analysis — forest / mint (inactive) */
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"]:first-child {
-        background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%) !important;
-        color: #075985 !important;
-        border-color: #7dd3fc !important;
+        background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%) !important;
+        color: #065f46 !important;
+        border-color: #6ee7b7 !important;
     }
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"]:first-child:hover {
-        background: linear-gradient(180deg, #bae6fd 0%, #7dd3fc 100%) !important;
-        color: #0c4a6e !important;
+        background: linear-gradient(180deg, #d1fae5 0%, #a7f3d0 100%) !important;
+        color: #064e3b !important;
     }
-    /* Copilot tab — soft violet */
+    /* Copilot — warm coral / sand (inactive) */
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"]:last-child {
-        background: linear-gradient(180deg, #ede9fe 0%, #ddd6fe 100%) !important;
-        color: #5b21b6 !important;
-        border-color: #c4b5fd !important;
+        background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%) !important;
+        color: #9a3412 !important;
+        border-color: #fdba74 !important;
     }
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"]:last-child:hover {
-        background: linear-gradient(180deg, #ddd6fe 0%, #c4b5fd 100%) !important;
-        color: #4c1d95 !important;
+        background: linear-gradient(180deg, #ffedd5 0%, #fed7aa 100%) !important;
+        color: #7c2d12 !important;
     }
-    /* Selected tab — unified accent */
+    /* Selected tab — deep teal (distinct from both idle states) */
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] {
-        background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%) !important;
-        color: #ffffff !important;
-        border-color: #38bdf8 !important;
+        background: linear-gradient(135deg, #0d9488 0%, #0f766e 55%, #115e59 100%) !important;
+        color: #f0fdfa !important;
+        border-color: #2dd4bf !important;
         font-weight: 700 !important;
-        box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35);
+        box-shadow: 0 8px 24px rgba(13, 148, 136, 0.4);
+    }
+
+    /* Platform source grid — uniform chip buttons inside st.container(border=True) */
+    [data-testid="stVerticalBlockBorderWrapper"] div[data-testid="column"] .stButton > button {
+        width: 100% !important;
+        min-height: 2.95rem !important;
+        font-size: 0.78rem !important;
+        font-weight: 600 !important;
+        line-height: 1.2 !important;
+        padding: 0.45rem 0.5rem !important;
+        border-radius: 8px !important;
+        text-align: center !important;
     }
 </style>
 """,
@@ -127,6 +149,10 @@ st.set_page_config(
 _inject_global_style()
 _hero_banner()
 
+# Start with an empty log box until user pastes or picks a template / example.
+if "log_input" not in st.session_state:
+    st.session_state.log_input = ""
+
 _SAMPLE_PATH = os.path.normpath(
     os.path.join(os.path.dirname(__file__), "..", "samples", "demo.log")
 )
@@ -194,14 +220,23 @@ PLATFORM_SCAFFOLDS: dict[str, str] = {
 }
 
 
-def _platform_chip_button(label: str, plat_key: str, *, primary: bool = False) -> None:
+def _platform_chip_button(
+    label: str,
+    plat_key: str,
+    *,
+    primary: bool = False,
+    tip: str = "",
+) -> None:
     """Clickable chip: loads a paste template into ``st.session_state.log_input``."""
+    help_txt = tip or (
+        f"Insert a starter template for this source. Paste your real log lines below the # comment lines."
+    )
     if st.button(
         label,
         key=f"plat_{plat_key}",
         use_container_width=True,
         type="primary" if primary else "secondary",
-        help=f"Insert starter template for {plat_key.replace('_', ' ')} — then paste your logs below it.",
+        help=help_txt,
     ):
         st.session_state.log_input = PLATFORM_SCAFFOLDS.get(
             plat_key, PLATFORM_SCAFFOLDS["general"]
@@ -268,63 +303,124 @@ with tab_logs:
         st.markdown(
             """
 <div style="
-    background: linear-gradient(135deg, #f0f9ff 0%, #faf5ff 100%);
-    border: 1px solid #c7d2fe;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
+    border: 1px solid #a7f3d0;
     border-radius: 12px;
-    padding: 12px 14px;
-    margin-bottom: 12px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    color: #334155;
 ">
-    <span style="font-weight: 700; color: #1e3a8a; font-size: 1rem;">Built for logs from</span>
-    <span style="color: #475569; font-size: 0.9rem;"> — click a source. We insert a <strong>starter template</strong>; then paste your real lines under it.</span>
-    <div style="margin-top:6px;font-size:0.82rem;color:#64748b;">Unsure? Use <strong style="color:#b45309;">General</strong> first.</div>
+    <strong style="color:#047857;">Log source</strong> — optional chips below insert a short header; then add your lines. 
+    <span style="color:#64748b;">Not sure? Click <strong>General</strong>.</span>
 </div>
 """,
             unsafe_allow_html=True,
         )
 
-        st.caption("Row 1 — common platforms · Row 2 — cloud & apps")
+        with st.container(border=True):
+            st.markdown(
+                "<div style='font-weight:700;font-size:0.95rem;color:#0f172a;margin-bottom:2px;'>"
+                "Choose platform <span style='font-weight:500;color:#64748b;font-size:0.82rem;'>"
+                "(same-size tiles — hover for details)</span></div>",
+                unsafe_allow_html=True,
+            )
+            g4 = st.columns(4)
+            with g4[0]:
+                _platform_chip_button(
+                    "⭐ General",
+                    "general",
+                    primary=True,
+                    tip="Not sure what you have? Inserts a neutral template — paste any errors or logs below.",
+                )
+            with g4[1]:
+                _platform_chip_button(
+                    "Red Hat",
+                    "rhel",
+                    tip="RHEL / Fedora family: journalctl, /var/log/messages, audit, OpenShift nodes, dnf…",
+                )
+            with g4[2]:
+                _platform_chip_button(
+                    "Windows",
+                    "windows",
+                    tip="Event Viewer export, Get-WinEvent, IIS, AD, PowerShell errors…",
+                )
+            with g4[3]:
+                _platform_chip_button(
+                    "Linux",
+                    "linux",
+                    tip="syslog-style: /var/log/syslog, auth.log, Debian/Ubuntu/SUSE…",
+                )
 
-        r1 = st.columns(6)
-        with r1[0]:
-            _platform_chip_button("⭐ General", "general", primary=True)
-        with r1[1]:
-            _platform_chip_button("Red Hat / RHEL", "rhel")
-        with r1[2]:
-            _platform_chip_button("Windows", "windows")
-        with r1[3]:
-            _platform_chip_button("Linux (syslog)", "linux")
-        with r1[4]:
-            _platform_chip_button("macOS", "macos")
-        with r1[5]:
-            _platform_chip_button("Kubernetes", "k8s")
+            g4b = st.columns(4)
+            with g4b[0]:
+                _platform_chip_button(
+                    "macOS",
+                    "macos",
+                    tip="log show, Console.app export, unified logging…",
+                )
+            with g4b[1]:
+                _platform_chip_button(
+                    "Kubernetes",
+                    "k8s",
+                    tip="kubectl logs, pod describe, ingress, API server, Helm…",
+                )
+            with g4b[2]:
+                _platform_chip_button(
+                    "AWS",
+                    "aws",
+                    tip="CloudWatch, CloudTrail JSON, Lambda, ECS…",
+                )
+            with g4b[3]:
+                _platform_chip_button(
+                    "Azure",
+                    "azure",
+                    tip="App Insights, Log Analytics, Activity Log, AKS…",
+                )
 
-        r2 = st.columns(6)
-        with r2[0]:
-            _platform_chip_button("AWS", "aws")
-        with r2[1]:
-            _platform_chip_button("Azure", "azure")
-        with r2[2]:
-            _platform_chip_button("Google Cloud", "gcp")
-        with r2[3]:
-            _platform_chip_button("Docker", "docker")
-        with r2[4]:
-            _platform_chip_button("VMware", "vmware")
-        with r2[5]:
-            _platform_chip_button("Apps (JSON / API)", "apps")
+            g4c = st.columns(4)
+            with g4c[0]:
+                _platform_chip_button(
+                    "GCP",
+                    "gcp",
+                    tip="Cloud Logging, GKE, Cloud Run…",
+                )
+            with g4c[1]:
+                _platform_chip_button(
+                    "Docker",
+                    "docker",
+                    tip="docker logs, compose, build output…",
+                )
+            with g4c[2]:
+                _platform_chip_button(
+                    "VMware",
+                    "vmware",
+                    tip="ESXi hostd/vmkernel, vCenter, vSAN/NSX snippets…",
+                )
+            with g4c[3]:
+                _platform_chip_button(
+                    "JSON / API",
+                    "apps",
+                    tip="Structured app logs, one JSON object per line, API gateways…",
+                )
 
         st.markdown("##### 📄 Your log text")
         log_input = st.text_area(
             "Paste logs here",
-            height=240,
+            height=260,
             label_visibility="collapsed",
             key="log_input",
-            placeholder="Click a source above, or paste directly: RHEL, Windows, K8s, JSON lines, CyberArk, etc.",
+            placeholder="Paste your logs here and hit the Run analysis button",
         )
         up_col1, up_col2 = st.columns(2)
         with up_col1:
             uploaded = st.file_uploader("Upload .log / .txt", type=["log", "txt"])
         with up_col2:
-            if st.button("📥 Load example logs", help="Fills the box from samples/demo.log"):
+            if st.button(
+                "📥 Load example logs",
+                help="Fills the box from samples/demo.log",
+                type="tertiary",
+            ):
                 try:
                     with open(_SAMPLE_PATH, encoding="utf-8") as f:
                         st.session_state.log_input = f.read()
@@ -607,7 +703,7 @@ with tab_copilot:
     with col_a:
         go = st.button("Get guidance", type="primary", key="copilot_go")
     with col_b:
-        if st.button("Clear chat", key="copilot_clear"):
+        if st.button("Clear chat", key="copilot_clear", type="tertiary"):
             st.session_state.pop("copilot_msgs", None)
             st.session_state.pop("_copilot_last_submit", None)
             st.rerun()
