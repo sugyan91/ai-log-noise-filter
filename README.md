@@ -8,18 +8,28 @@ A pragmatic SRE-focused tool to reduce log noise and surface what matters.
 2. **Optional:** Add one line under the project: *“Clone, follow README → Run locally,”* so reviewers know they do not need your machine.
 3. **Optional:** Record a **30–60s screen capture** (paste logs → run → summary) and link it from the repo README or your portfolio; some reviewers skim before installing.
 
-This repo is self-contained: no database, no API keys required for the default flow (explanations use built-in heuristics unless you wire an LLM yourself).
+This repo is self-contained: no database required. Heuristic explanations work offline; **optional Hugging Face** models download on first use for deeper remediation text.
 
 ## Features
 - ERROR/WARN aggregation with counts
 - Time-window filtering
-- Human-readable explanations (offline or LLM-backed)
-- Optional AI clustering + novelty detection
+- **Troubleshooting copilot** tab: describe your goal, paste errors/logs → HF text model suggests checks, files/consoles, and fixes
+- Heuristic explanations + **on-demand Hugging Face (Flan-T5)** remediation per error group
+- Optional AI clustering + novelty detection (**sentence-transformers** / HF Hub embeddings)
+
+## Hugging Face models & fine-tuning
+
+| Purpose | Default model | Override |
+|--------|----------------|----------|
+| Log clustering embeddings | `sentence-transformers/all-MiniLM-L6-v2` | Edit `app/embedding.py` |
+| Remediation / copilot text | `google/flan-t5-base` | Env **`HF_REMEDIATION_MODEL`** (any compatible `text2text-generation` checkpoint on the Hub) |
+
+To use a **fine-tuned** model: train Flan-T5 (or similar seq2seq) with Hugging Face `Trainer` / TRL on your (prompt, answer) pairs, push the checkpoint to the Hub, then set `HF_REMEDIATION_MODEL=your-org/your-model`.
 
 ## Prerequisites
 
 - **Python 3.10+** (3.11 recommended)
-- Network access for **`pip install`** (and the first run of **AI clustering**, which downloads an embedding model — can take a few minutes)
+- Network for **`pip install`** and first-time **Hugging Face** downloads (embeddings for clustering; **Flan-T5** for copilot / remediation — can take several minutes and ~1GB+ disk)
 
 ## Run locally
 
@@ -45,12 +55,13 @@ pip install -r requirements.txt
 streamlit run ui\streamlit_app.py
 ```
 
-The UI opens in your browser (usually `http://localhost:8501`). Click **Run analysis** after pasting logs or uploading a file.
+The UI opens in your browser (usually `http://localhost:8501`). Use **Log analysis** for paste → **Analyze**, or **Troubleshooting copilot** for natural-language goals + pasted errors (HF text model).
 
-**Quick test:** upload `samples/demo.log` or paste its contents, then use **Error summary (default)** with **Run analysis**.
+**Quick test:** **Load example logs** → **Analyze**; or open **Troubleshooting copilot**, describe a goal, paste a fake error line, **Get guidance**.
 
 ### Notes for reviewers
 
-- **Error summary** mode runs fully offline after install.
-- **AI clustering (advanced)** pulls ML dependencies and may download a model on first use; use a smaller paste first if you want a faster tryout.
-- **`OPENAI_API_KEY`:** leave unset for heuristic explanations. The code path for a live LLM is not implemented in this repo; setting the key alone will not enable a remote model.
+- **Error summary** heuristics run offline; **Hugging Face** remediation downloads **Flan-T5** (~1GB) on first use.
+- **AI clustering** downloads embedding weights on first use; start with a small paste for a quick tryout.
+- **`HF_REMEDIATION_MODEL`:** optional; point to your Hub checkpoint after fine-tuning.
+- **`OPENAI_API_KEY`:** not used if unset; HF paths do not require it.
