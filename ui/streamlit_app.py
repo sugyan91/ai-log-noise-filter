@@ -36,37 +36,30 @@ def _inject_global_style() -> None:
         border-radius: 10px 10px 0 0 !important;
         padding: 11px 20px !important;
         font-size: 0.9rem !important;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important;
         letter-spacing: 0.02em;
         border: 2px solid transparent !important;
         transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
-    }
-    /* Log analysis — forest / mint (inactive) */
-    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"]:first-child {
+        /* Default (inactive): same mint / forest as Log analysis — both tab labels match */
         background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%) !important;
         color: #065f46 !important;
         border-color: #6ee7b7 !important;
     }
-    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"]:first-child:hover {
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"]:hover {
         background: linear-gradient(180deg, #d1fae5 0%, #a7f3d0 100%) !important;
         color: #064e3b !important;
     }
-    /* Copilot — warm coral / sand (inactive) */
-    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"]:last-child {
-        background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%) !important;
-        color: #9a3412 !important;
-        border-color: #fdba74 !important;
-    }
-    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"]:last-child:hover {
-        background: linear-gradient(180deg, #ffedd5 0%, #fed7aa 100%) !important;
-        color: #7c2d12 !important;
-    }
-    /* Selected tab — deep teal (distinct from both idle states) */
+    /* Selected tab — teal (overrides hover + idle) */
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] {
         background: linear-gradient(135deg, #0d9488 0%, #0f766e 55%, #115e59 100%) !important;
         color: #f0fdfa !important;
         border-color: #2dd4bf !important;
         font-weight: 700 !important;
         box-shadow: 0 8px 24px rgba(13, 148, 136, 0.4);
+    }
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"]:hover {
+        background: linear-gradient(135deg, #0f766e 0%, #115e59 55%, #134e4a 100%) !important;
+        color: #f0fdfa !important;
     }
 
     /* Platform source grid — uniform chip buttons inside st.container(border=True) */
@@ -275,7 +268,7 @@ Describe what you’re doing and paste the **exact** error; the HF model suggest
 tab_logs, tab_copilot = st.tabs(
     [
         "📊  Log analysis",
-        "💬  Troubleshooting copilot",
+        "📊  Troubleshooting copilot",
     ]
 )
 
@@ -661,11 +654,25 @@ with tab_logs:
 # Tab: Troubleshooting copilot (HF text generation)
 # --------------------------------------------------------------------------- #
 with tab_copilot:
+    st.success(
+        "**Step 1:** Describe what you’re fixing. **Step 2:** Paste the **exact** error or log snippet. "
+        "**Step 3:** Click **Get guidance**."
+    )
+
     st.markdown(
         """
-<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
-    <strong>💬 Copilot</strong> — Describe your situation (e.g. CyberArk, AD, Linux service). 
-    Paste the <strong>exact</strong> error or log snippet so the model can suggest what to check and how to fix it.
+<div style="
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
+    border: 1px solid #a7f3d0;
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    color: #334155;
+">
+    <strong style="color:#047857;">Troubleshooting copilot</strong> — same style as Log analysis above. 
+    Describe your situation (CyberArk, AD, Linux service, etc.), then paste the <strong>exact</strong> error or log lines so the model can suggest checks and fixes.
 </div>
 """,
         unsafe_allow_html=True,
@@ -686,6 +693,11 @@ with tab_copilot:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
+    st.markdown("##### 📄 Your goal & error text")
+    st.caption(
+        "Same typography as Log analysis — use the boxes below, then **Get guidance** (like **Run analysis** on the other tab)."
+    )
+
     st.text_area(
         "What are you trying to do?",
         height=120,
@@ -701,9 +713,9 @@ with tab_copilot:
 
     col_a, col_b = st.columns(2)
     with col_a:
-        go = st.button("Get guidance", type="primary", key="copilot_go")
+        go = st.button("▶ Get guidance", type="primary", key="copilot_go", use_container_width=True)
     with col_b:
-        if st.button("Clear chat", key="copilot_clear", type="tertiary"):
+        if st.button("Clear chat", key="copilot_clear", type="tertiary", use_container_width=True):
             st.session_state.pop("copilot_msgs", None)
             st.session_state.pop("_copilot_last_submit", None)
             st.rerun()
