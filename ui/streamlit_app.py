@@ -15,17 +15,48 @@ def _inject_global_style() -> None:
         """
 <style>
     .stTabs [data-baseweb="tab-list"] {
-        gap: 6px;
-        background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
-        padding: 6px 8px 0 8px;
-        border-radius: 10px 10px 0 0;
+        gap: 10px;
+        background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+        padding: 10px 12px 0 12px;
+        border-radius: 14px 14px 0 0;
         border: 1px solid #cbd5e1;
         border-bottom: none;
     }
-    .stTabs [aria-selected="true"] {
-        background: white !important;
-        border-radius: 8px 8px 0 0 !important;
-        font-weight: 600 !important;
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] {
+        border-radius: 12px 12px 0 0 !important;
+        padding: 12px 22px !important;
+        font-size: 0.95rem !important;
+        letter-spacing: 0.01em;
+        border: 2px solid transparent !important;
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+    /* Log analysis tab — cool blues & teal */
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"]:first-child {
+        background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%) !important;
+        color: #075985 !important;
+        border-color: #7dd3fc !important;
+    }
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"]:first-child:hover {
+        background: linear-gradient(180deg, #bae6fd 0%, #7dd3fc 100%) !important;
+        color: #0c4a6e !important;
+    }
+    /* Copilot tab — soft violet */
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"]:last-child {
+        background: linear-gradient(180deg, #ede9fe 0%, #ddd6fe 100%) !important;
+        color: #5b21b6 !important;
+        border-color: #c4b5fd !important;
+    }
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"]:last-child:hover {
+        background: linear-gradient(180deg, #ddd6fe 0%, #c4b5fd 100%) !important;
+        color: #4c1d95 !important;
+    }
+    /* Selected tab — unified accent */
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] {
+        background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%) !important;
+        color: #ffffff !important;
+        border-color: #38bdf8 !important;
+        font-weight: 700 !important;
+        box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35);
     }
 </style>
 """,
@@ -68,25 +99,18 @@ def _hero_banner() -> None:
             <div title="Network & dependencies">{svg_net}</div>
         </div>
     </div>
-    <div class="sl-platform-ribbon" style="
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px;
+    <div style="
         margin-bottom: 1rem;
-        padding: 10px 12px;
-        background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+        padding: 12px 14px;
+        background: linear-gradient(90deg, #f0f9ff 0%, #faf5ff 100%);
         border-radius: 10px;
-        border: 1px solid #cbd5e1;
-        font-size: 0.78rem;
+        border: 1px solid #bae6fd;
+        font-size: 0.88rem;
+        color: #334155;
+        line-height: 1.5;
     ">
-        <span style="font-weight: 700; color: #475569; margin-right: 4px;">Built for logs from:</span>
-        <span style="background: #3d0c02; color: #fff; padding: 5px 11px; border-radius: 6px; font-weight: 600;">Red Hat / RHEL</span>
-        <span style="background: #0078d4; color: #fff; padding: 5px 11px; border-radius: 6px; font-weight: 600;">Windows</span>
-        <span style="background: #1e293b; color: #e2e8f0; padding: 5px 11px; border-radius: 6px; font-weight: 600;">Linux (syslog)</span>
-        <span style="background: #0f766e; color: #fff; padding: 5px 11px; border-radius: 6px; font-weight: 600;">macOS</span>
-        <span style="background: #4338ca; color: #fff; padding: 5px 11px; border-radius: 6px; font-weight: 600;">Kubernetes / cloud</span>
-        <span style="background: #b45309; color: #fff; padding: 5px 11px; border-radius: 6px; font-weight: 600;">Apps (JSON / APIs)</span>
+        <strong style="color:#0c4a6e;">Tip:</strong> Open <strong>Log analysis</strong> and click a <strong>colored source chip</strong> — we’ll drop a starter template into the paste box so you can add your logs right away.
+        <span style="opacity:0.85;"> Not sure? Choose <strong>General</strong>.</span>
     </div>
 </div>
 """,
@@ -116,6 +140,76 @@ Then click **Get guidance** again."""
 
 MIN_LOG_CHARS = 20
 
+# Click a chip → inserts this text into the log box so users can paste underneath.
+PLATFORM_SCAFFOLDS: dict[str, str] = {
+    "general": (
+        "# ⭐ General — not sure what you have?\n"
+        "# Paste ANYTHING below: errors, stack traces, ticket text, screenshots copied as text, "
+        "or mixed logs. We’ll try to detect timestamps and severity.\n\n"
+    ),
+    "rhel": (
+        "# Red Hat / RHEL\n"
+        "# Paste: journalctl, /var/log/messages, audit.log, dnf/yum, sosreport, OpenShift node logs…\n\n"
+    ),
+    "windows": (
+        "# Windows\n"
+        "# Paste: Event Viewer export, Get-WinEvent, IIS, AD / DNS, PowerShell errors…\n\n"
+    ),
+    "linux": (
+        "# Linux (syslog)\n"
+        "# Paste: /var/log/syslog, auth.log, kern.log, Debian/Ubuntu/SUSE style lines…\n\n"
+    ),
+    "macos": (
+        "# macOS\n"
+        "# Paste: log show --style syslog, Console.app export, unified logging…\n\n"
+    ),
+    "k8s": (
+        "# Kubernetes / containers\n"
+        "# Paste: kubectl logs, pod describe, ingress, API server, CNI, Helm install output…\n\n"
+    ),
+    "aws": (
+        "# Amazon Web Services (AWS)\n"
+        "# Paste: CloudWatch log snippets, CloudTrail JSON, Lambda, ECS task logs…\n\n"
+    ),
+    "azure": (
+        "# Microsoft Azure\n"
+        "# Paste: App Insights / Log Analytics export, Activity Log, AKS pod logs…\n\n"
+    ),
+    "gcp": (
+        "# Google Cloud (GCP)\n"
+        "# Paste: Cloud Logging export, GKE workload logs, Cloud Run…\n\n"
+    ),
+    "docker": (
+        "# Docker / containerd\n"
+        "# Paste: docker logs, docker compose, build output…\n\n"
+    ),
+    "vmware": (
+        "# VMware\n"
+        "# Paste: ESXi hostd / vmkernel, vCenter events, vSAN / NSX excerpts…\n\n"
+    ),
+    "apps": (
+        "# Apps — JSON / APIs / microservices\n"
+        "# Paste: one JSON object per line, API gateway logs, structured app logs…\n\n"
+    ),
+}
+
+
+def _platform_chip_button(label: str, plat_key: str, *, primary: bool = False) -> None:
+    """Clickable chip: loads a paste template into ``st.session_state.log_input``."""
+    if st.button(
+        label,
+        key=f"plat_{plat_key}",
+        use_container_width=True,
+        type="primary" if primary else "secondary",
+        help=f"Insert starter template for {plat_key.replace('_', ' ')} — then paste your logs below it.",
+    ):
+        st.session_state.log_input = PLATFORM_SCAFFOLDS.get(
+            plat_key, PLATFORM_SCAFFOLDS["general"]
+        )
+        st.toast("Template loaded — paste your logs under the comment lines.")
+        st.rerun()
+
+
 WINDOW_CHOICES: list[tuple[int, str]] = [
     (5, "5 min — only the very latest activity"),
     (15, "15 min — short incident window"),
@@ -129,7 +223,7 @@ with st.sidebar:
     st.markdown(
         """
 **Log analysis**  
-Paste server or app logs, then **Run analysis**. The app groups repeated errors and can hide old lines so you focus on the incident window.
+Click a **source chip** (e.g. **General**, **RHEL**, **Windows**) to drop a paste template, add your logs, then **Run analysis**. The app groups repeated errors and can narrow the time window.
 
 **Right-hand panel (when you analyze)**  
 - **How far back to look** — We find the **newest timestamp** in your file, then only keep lines in that many **minutes before** it. *Example:* 60 min = “last hour of the story,” not clock time on your PC.  
@@ -143,7 +237,12 @@ Describe what you’re doing and paste the **exact** error; the HF model suggest
         """
     )
 
-tab_logs, tab_copilot = st.tabs(["📊 Log analysis", "💬 Troubleshooting copilot"])
+tab_logs, tab_copilot = st.tabs(
+    [
+        "📊  Log analysis",
+        "💬  Troubleshooting copilot",
+    ]
+)
 
 # --------------------------------------------------------------------------- #
 # Tab: Log analysis
@@ -166,13 +265,60 @@ with tab_logs:
     col1, col2 = st.columns([2, 1])
 
     with col1:
+        st.markdown(
+            """
+<div style="
+    background: linear-gradient(135deg, #f0f9ff 0%, #faf5ff 100%);
+    border: 1px solid #c7d2fe;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+">
+    <span style="font-weight: 700; color: #1e3a8a; font-size: 1rem;">Built for logs from</span>
+    <span style="color: #475569; font-size: 0.9rem;"> — click a source. We insert a <strong>starter template</strong>; then paste your real lines under it.</span>
+    <div style="margin-top:6px;font-size:0.82rem;color:#64748b;">Unsure? Use <strong style="color:#b45309;">General</strong> first.</div>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+        st.caption("Row 1 — common platforms · Row 2 — cloud & apps")
+
+        r1 = st.columns(6)
+        with r1[0]:
+            _platform_chip_button("⭐ General", "general", primary=True)
+        with r1[1]:
+            _platform_chip_button("Red Hat / RHEL", "rhel")
+        with r1[2]:
+            _platform_chip_button("Windows", "windows")
+        with r1[3]:
+            _platform_chip_button("Linux (syslog)", "linux")
+        with r1[4]:
+            _platform_chip_button("macOS", "macos")
+        with r1[5]:
+            _platform_chip_button("Kubernetes", "k8s")
+
+        r2 = st.columns(6)
+        with r2[0]:
+            _platform_chip_button("AWS", "aws")
+        with r2[1]:
+            _platform_chip_button("Azure", "azure")
+        with r2[2]:
+            _platform_chip_button("Google Cloud", "gcp")
+        with r2[3]:
+            _platform_chip_button("Docker", "docker")
+        with r2[4]:
+            _platform_chip_button("VMware", "vmware")
+        with r2[5]:
+            _platform_chip_button("Apps (JSON / API)", "apps")
+
         st.markdown("##### 📄 Your log text")
         log_input = st.text_area(
             "Paste logs here",
             height=240,
             label_visibility="collapsed",
             key="log_input",
-            placeholder="Paste from /var/log/messages, journalctl, Windows Event export, CyberArk, K8s, or your app…",
+            placeholder="Click a source above, or paste directly: RHEL, Windows, K8s, JSON lines, CyberArk, etc.",
         )
         up_col1, up_col2 = st.columns(2)
         with up_col1:
