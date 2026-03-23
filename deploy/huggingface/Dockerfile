@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN useradd -m -u 1000 user
 USER user
 WORKDIR /home/user/app
+ENV PATH="/home/user/.local/bin:${PATH}"
 
 COPY --chown=user requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
@@ -25,4 +26,4 @@ ENV STREAMLIT_SERVER_HEADLESS=true \
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["python", "-m", "streamlit", "run", "app.py", "--server.port=8501", "--server.address", "0.0.0.0"]
