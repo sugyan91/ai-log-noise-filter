@@ -10,6 +10,8 @@ short_description: Paste logs, cluster errors, optional Hugging Face copilot.
 
 # AI Log Noise Filter (Streamlit)
 
+The `Dockerfile` downloads `samples/demo.log` from GitHub during build, so your Space repo does **not** need a `samples/` folder.
+
 This folder is a **ready-to-push** copy for [Hugging Face Spaces](https://huggingface.co/docs/hub/spaces-overview) using the **Docker** SDK.
 
 ## Push to your Space
