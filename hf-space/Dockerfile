@@ -1,5 +1,5 @@
 # Hugging Face Space (SDK: Docker, app_port: 8501 in README.md).
-FROM python:3.10-bookworm-slim
+FROM python:3.10-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \

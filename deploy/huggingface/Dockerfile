@@ -1,7 +1,7 @@
 # Hugging Face Space (SDK: Docker). Exposes Streamlit on port 8501 (set app_port: 8501 in README).
 # Local test from repo root: docker build -f deploy/huggingface/Dockerfile -t log-filter .
 
-FROM python:3.10-bookworm-slim
+FROM python:3.10-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
