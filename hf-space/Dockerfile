@@ -11,8 +11,10 @@ RUN useradd -m -u 1000 user
 USER user
 WORKDIR /home/user/app
 
-COPY --chown=user requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip \
+# Space repo may omit requirements.txt; pin to same file as GitHub main.
+RUN curl -fsSL -o requirements.txt \
+    https://raw.githubusercontent.com/sugyan91/ai-log-noise-filter/main/requirements.txt \
+    && pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
 COPY --chown=user app ./app
